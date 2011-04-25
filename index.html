@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en"> 
+  <head>
+    <title>Try RabbitMQ</title>
+	<link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-1.5.2.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jquery.base64.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/mustache.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/jQueryMustache.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/raphael.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/raphael.connection.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/inspector.views.js"></script>
+    <link rel="stylesheet" href="css/style.css" type="text/css" media="screen" title="no title" charset="utf-8">
+  </head> 
+  <body id="tryrmq">
+    <h1>Try RabbitMQ</h1>
+    <div id="whiteboard"></div>
+    <div id="widgets">
+        <div id="inspector">
+            <h2>Inspector</h2>
+			<div class="inspector-content"> 
+                <div id="inspected-item"></div>
+            </div>
+        </div>
+		<div class="panel">
+			<div id="tabs">
+				<ul>
+					<li><a href="#tabs-2">Setup</a></li>
+					<li><a href="#tabs-1">Publish</a></li>
+				</ul>
+				<div style="clear:both;"></div>
+        <div id="tabs-1" class="form-kind">
+            <div id="start_consumer_wrap" class="widget_forms">
+                <form id="start_consumer" action="/">
+                    <fieldset>
+                    <legend>Start Consumer</legend>
+                        <div>
+                            <label for="consumer_queue">Queue:</label>
+                            <input type="text" name="consumer_queue" value="" id="consumer_queue">
+                        </div>
+                        <div>
+                            <label for="consumer_callback">Callback:</label>
+                            <textarea name="consumer_callback" id="consumer_callback"></textarea>
+                        </div>
+                        <div>
+                            <input type="submit" name="start_consumer" value="Start" id="start_consumer">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+			<div id="publish_msg_wrap" class="widget_forms">
+                <form id="publish_msg" action="/">
+                    <fieldset>
+                    <legend>Publish Message</legend>
+                        <div>
+                            <label for="msg_body">Body:</label>
+                            <input type="text" name="msg_body" value="" id="msg_body">
+                        </div>
+                        <div>
+                            <label for="p_exchange_name">Exchange:</label>
+                            <input type="text" name="p_exchange_name" value="" id="p_exchange_name">
+                        </div>
+                        <div>
+                            <label for="p_routing_key">Routing Key:</label>
+                            <input type="text" name="p_routing_key" value="" id="p_routing_key">
+                        </div>
+                        <div>
+                            <label for="p_reply_to">Reply To:</label>
+                            <input type="text" name="p_reply_to" value="" id="p_reply_to">
+                        </div>
+                        <div>
+                            <label for="p_correlation_id">Correlation Id:</label>
+                            <input type="text" name="p_correlation_id" value="" id="p_correlation_id">
+                        </div>
+                        <div>
+                            <input type="submit" name="send_msg" value="Publish" id="send_msg">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+        <div id="tabs-2" class="form-kind">
+            <div id="exchange_form_wrap" class="widget_forms">
+                <form id="exchange_form" action="/">
+                    <fieldset>
+                        <legend>Exchange</legend>
+                        <div>
+                            <label for="exchange_name">Name:</label>
+                            <input type="text" name="exchange_name" value="" id="exchange_name">
+                        </div>
+                        <div>
+                            <input type="submit" name="add_exchange" value="Add" id="add_exchange">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div id="queue_form_wrap" class="widget_forms">
+                <form id="queue_form" action="/">
+                    <fieldset>
+                        <legend>Queue</legend>
+                        <div>
+                            <label for="queue_name">Name:</label>
+                            <input type="text" name="queue_name" value="" id="queue_name">
+                        </div>
+                        <div>
+                            <input type="submit" name="add_queue" value="Add" id="add_queue">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div id="bind_form_wrap" class="widget_forms">
+                <form id="bind_form" action="/">
+                    <fieldset>
+                        <legend>Binding</legend>
+                        <div>
+                            <label for="b_exchange_name">Exchange:</label>
+                            <input type="text" name="b_exchange_name" value="" id="b_exchange_name">
+                        </div>
+                        <div>
+                            <label for="b_queue_name">Queue:</label>
+                            <input type="text" name="b_queue_name" value="" id="b_queue_name">
+                        </div>
+                        <div>
+                            <label for="routing_key">Routing Key:</label>
+                            <input type="text" name="routing_key" value="" id="routing_key">
+                        </div>
+                        <div>
+                            <input type="submit" name="bind_queue" value="Bind" id="bind_queue">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+	</div>
+    </div>
+</div>
+	<a class="trigger active" href="#">Tools</a>
+    <div style="clear: both;"></div>
+    <div id="msg_container">
+		<div id="msg_header">
+        	<a class="msg_title">Messages:</a>
+		</div>
+        <div id="msgs">
+            <table id="status_msgs"></table>
+        </div>
+    </div>
+<script id="default-inspector" type="x-tmpl-mustache">
+<div>Click on Item to see the details here.</div>
+</script>
+<script id="queue-details" type="x-tmpl-mustache">
+<div id="inspected-queue">
+<h3>Queue:</h3>
+<dl class="margins-removed">
+<dt>Name:</dt><dd>{{Name}}</dd>
+<dt>Messages:</dt><dd>{{Messages}}</dd>
+<dt>Consumers:</dt><dd>{{Consumers}}</dd>
+<dt>Bindings:</dt>
+<dd>
+<ul>
+{{#Bindings}}
+<li>
+{{#bindingsAsLink}}
+<span class="binding">
+<a href="#" class="queue-binding">Exchange: {{exchange}} <-> Routing Key: {{rkey}}</a>
+<span class="option-buttons"><a href="#{{exchange}}:{{Name}}:{{rkey}}" class="delete-button">Delete</a> <a href="#" class="cancel-button">Cancel</a></span>
+</span>
+{{/bindingsAsLink}}
+{{#bindingsAsText}}
+<span class="binding">
+Exchange: {{exchange}} <-> Routing Key: {{rkey}}
+</span>
+{{/bindingsAsText}}
+</li>
+{{/Bindings}}
+</ul>
+</dd>
+</dl>
+</div>
+</script>
+<script id="exchange-details" type="x-tmpl-mustache">
+<div id="inspected-exchange">
+<h3>Exchange:</h3>
+<dl class="margins-removed">
+<dt>Name:</dt><dd>{{Name}}</dd>
+<dt>Bindings:</dt>
+<dd>
+{{#showBindings}}
+<ul>
+{{#Bindings}}
+<li>Routing Key: {{rkey}}<br />
+<ul>
+{{#queues}}
+<li>
+Queue: <a href="#" class="exchange-binding">{{.}}</a>
+<span class="option-buttons"><a href="#{{Name}}:{{.}}:{{rkey}}" class="delete-button">Delete</a> <a href="#" class="cancel-button">Cancel</a></span>
+</li>{{/queues}}
+</ul>
+</li>
+{{/Bindings}}
+</ul>
+{{/showBindings}}
+</dd>
+</dl>
+</div>
+</script>
+<script id="consumer-details" type="x-tmpl-mustache">
+<div id="inspected-consumer">
+<h3>Consumer:</h3>
+<dl class="margins-removed">
+<dt>Queue: </dt>
+<dd>
+<a href="#" class="queue-link">{{Queue}}</a>
+<span class="option-buttons"><a href="#{{Queue}}|{{CTag}}" class="delete-button">Stop</a> <a href="#" class="cancel-button">Cancel</a></span>
+</dd>
+</dl>
+</div>
+</script>
+    <script type="text/javascript" charset="utf-8">
+    
+// (function($){
+    
+    var paper;
+    
+    uiElements = {
+        exchanges: {},
+        queues: {},
+        bindings: {},
+        consumers: {},
+        channels: {},
+    };
+    
+    var exchanges = {};
+    var queues = {};
+    var consumers = {};
+    
+    function queueExists(queue){
+        return (typeof queues[queue] != 'undefined');
+    }
+    
+    function exchangeExists(exchange) {
+        return (typeof exchanges[exchange] != 'undefined');
+    }
+    
+    function getConsumerEventName(consumerTag) {
+        return consumerTag + ":consume";
+    }
+    
+    function getQueueConsumerEventName(queue, consumerTag) {
+        return queue + ':' + consumerTag;
+    }
+    
+    var inspector = null;
+    function createInspector(selector) {
+        inspector = {
+            ui: $(selector),
+            currentItem: null
+        };
+    };
+    function showDefaultInspector() {
+        inspector.ui.html($('#default-inspector').mustache({}));
+    }
+    
+    var Consumer = function(qName, callback){
+        
+        var that = {
+            queueName: qName,
+            consumerTag: null,
+            callback: callback,
+            ownerDocument: document,
+
+            consume: function(queue) {
+                var that = this;
+                
+                this.consumerTag = queue.addConsumer(this);
+
+                $(queue).bind(getQueueConsumerEventName(queue.name, this.consumerTag), function(event, msg) {
+                    that.callback(msg);
+                    $(that).trigger(getConsumerEventName(that.consumerTag), ["OK"]);
+                });
+
+                //subscribe to queue
+                $(this).trigger(getConsumerEventName(this.consumerTag), ["start"]);
+                return this.consumerTag;
+            },
+            
+            getConsumerTag: function() {
+                return this.consumerTag;
+            },
+            
+            getQueueName: function() {
+                return this.queueName;
+            },
+            
+            stop: function(queue) {
+                queue.removeConsumer(this);
+                $(this).trigger('update-inspector', [this, 'stop']);
+            },
+            
+            getName: function() {
+                return this.consumerTag;
+            },
+            
+            getType: function() {
+                return 'consumer';
+            }
+        };
+        return that;
+    };
+    
+    // var RpcClient = function(callback) {
+    //     return Consumer(function(msg){
+    //         
+    //     });
+    // }
+    
+    // var RpcServer = function(msgTransFn) {
+    //     return Consumer(function(msg) {
+    //         sendMsg("", msgTransFn(msg.body), msg.props.reply_to, "", msg.props.correlation_id);
+    //     });
+    // };
+    
+    var Queue = function(name){
+        console.log("Creating Queue: " + name);
+        var that = {
+            ownerDocument: document,
+            messages: [],
+            consumers: [],
+            bindings: [],
+            name: name,
+            currentTag: 0,
+
+            enqueue: function(msg) {
+                this.messages.push(msg);
+                $(this).trigger('update-inspector', [this, 'enqueue']);
+                this.maybeSendMessage();
+            },
+
+            //TODO keep msgs in separate array to implement acks
+            dequeue: function() {
+                var msg = this.messages.shift();
+                $(this).trigger('update-inspector', [this, 'dequeue']);
+                return msg;
+            },
+
+            addConsumer: function(consumer) {
+                var consumerTag = [this.name, this.currentTag++].join(':');
+                this.consumers.push(consumerTag);
+                var that = this;
+                $(consumer).bind(getConsumerEventName(consumerTag), function(event){
+                    that.sendMessage();
+                });
+                $(this).trigger('update-inspector', [this, 'addConsumer']);
+                return consumerTag;
+            },
+            
+            removeConsumer: function(consumer) {
+                var that = this;
+                var result = false;
+                var consumerTag = consumer.getConsumerTag();
+                
+                $(consumer).unbind(getConsumerEventName(consumerTag));
+                $(this).unbind(getQueueConsumerEventName(this.name, consumerTag));
+                $.each(this.consumers, function(i, v) {
+                    that.consumers.splice(i, 1);
+                    result = true;
+                    return false;
+                });
+                $(this).trigger('update-inspector', [this, 'removeConsumer']);
+                return result;
+            },
+
+            maybeSendMessage: function() {
+                if(this.consumers.length > 0) {
+                    this.sendMessage();
+                }
+            },
+
+            sendMessage: function() {
+                if(this.getLength() > 0) {
+                    var that = this;
+                    var msg = this.dequeue();
+                    console.log("Sending " + msg);
+                    $.each(this.consumers, function (index, consumerTag){
+                        $(that).trigger(that.name + ':' + consumerTag, [msg]);
+                    });
+                }
+            },
+            
+            bindTo: function(exchange, rkey) {
+                if(exchange.bindQueue(this, rkey)) {
+                    this.bindings.push({exchange: exchange.getName(), rkey: rkey});
+                    $(this).trigger('update-inspector', [this, 'bind']);
+                    return true;
+                }
+            },
+            
+            unbind: function(exchange, rkey) {
+                if(exchange.unbindQueue(this, rkey)) {
+                    var that = this;
+                    var result = false;
+                    $.each(this.bindings, function(i, v){
+                        if(v.exchange == exchange.getName() && v.rkey == rkey) {
+                            that.bindings.splice(i, 1);
+                            result = true;
+                            return false;
+                        }
+                    });
+                    $(this).trigger('update-inspector', [this, 'unbind']);
+                    return result;
+                }
+            },
+            
+            getBindings: function() {
+                return this.bindings;
+            },
+            
+            getLength: function(){
+                return this.messages.length;
+            },
+            
+            getConsumerNum: function(){
+                return this.consumers.length;
+            },
+            
+            getName: function(){
+                return this.name;
+            },
+            
+            getType: function() {
+                return 'queue';
+            },
+        };
+        return that;
+    };
+    
+    var Exchange = function(name) {
+        console.log("Creating Exchange: " + name);
+        var that = {
+            bindings: {},
+            name: name,
+
+            //TODO later add diferent routing algorithms
+            route: function(msg, rkey) {
+                var rkey = this._calcBindKey(rkey);
+                if(this.hasBinding(rkey)) {
+                    $.each(this.bindings[rkey], function(index, queue){
+                        queue.enqueue(msg);
+                    });
+                } else {
+                    console.log("No binding for routing key: " + rkey);
+                }
+            },
+            
+            _calcBindKey: function(rkey) {
+                return 'c:' + rkey;
+            },
+
+            bindQueue: function(queue, rkey) {
+                bKey = this._calcBindKey(rkey);
+                if(!this.hasBinding(bKey)) {
+                    //initialize an array with all the queues for said rkey
+                    this.bindings[bKey] = [queue];
+                } else {
+                    this.bindings[bKey].push(queue);
+                }
+                $(this).trigger('update-inspector', [this, 'bindQueue']);
+                return true;
+            },
+            
+            unbindQueue: function(queue, rkey) {
+                bKey = this._calcBindKey(rkey);
+                if(this.hasBinding(bKey)) {
+                    i = this.bindings[bKey].indexOf(queue);
+                    console.log('unbindQueue: ', i);
+                    if(i > -1) {
+                        this.bindings[bKey].splice(i, 1);
+                    }
+                }
+                $(this).trigger('update-inspector', [this, 'unbindQueue']);
+                return true;
+            },
+
+            hasBinding: function(bKey) {
+                return (typeof this.bindings[bKey] != 'undefined');
+            },
+            
+            getName: function() {
+                return this.name;
+            },
+            
+            getType: function() {
+                return 'exchange';
+            },
+            
+            getBindings: function() {
+                return this.bindings;
+            }
+        };
+        return that;
+    };
+    
+    var handleDrag = {
+        dragger: function() {
+          this.ox = this.type == "rect" ? this.attr("x") : this.attr("cx");
+          this.oy = this.type == "rect" ? this.attr("y") : this.attr("cy");
+          this.animate({"fill-opacity": .2}, 500);
+        },
+        
+        move: function(dx, dy) {
+          var att = this.type == "rect" ? {x: this.ox + dx, y: this.oy + dy} : {cx: this.ox + dx, cy: this.oy + dy};
+          this.attr(att);
+          $.each(uiElements.bindings, function(k, v){
+              paper.connection(v);
+          });
+          $.each(uiElements.channels, function(k, v){
+                paper.connection(v);
+          });
+          paper.safari();
+        },
+        
+        up: function() {
+          this.animate({"fill-opacity": .5}, 500);
+        },
+    }
+    
+    function getQualifiedExchangeName(name){
+        return 'e:' + name;
+    }
+    
+    function getQualifiedQueueName(name){
+        return 'q:' + name;
+    }
+    
+    function drawExchange(n) {
+        var name = getQualifiedExchangeName(n);
+        if(!exchangeExists(name)) {
+            var ex = paper.rect(10, 10, 25, 25, 5);
+            ex.attr({fill: "green", stroke: "#000", "fill-opacity": .50, "stroke-width": 2, cursor: "move"});
+            ex.drag(handleDrag.move, handleDrag.dragger, handleDrag.up);
+            uiElements.exchanges[name] = ex;
+            exchanges[name] = Exchange(name, ex);
+
+            ex.click(function(event){
+                updateInspector(inspector, {type: exchanges[name].getType(), item: exchanges[name]});
+                $("#b_exchange_name").val(n);
+                $("#p_exchange_name").val(n);
+            });
+            
+            $(exchanges[name]).bind('update-inspector', function(event, target, tag){
+                if(inspector.currentItem == target.getName()){
+                    updateInspector(inspector, {type: target.getType(), item: target});
+                }
+            });
+        }
+    }
+    
+    function randQueueName() {
+        return "amq.gen-" + $.base64.encode(String((new Date()).getTime()).replace(/\D/gi,''));
+    }
+    
+    function maybeGetRandomQueueName(name) {
+        return name.length == 0 ? randQueueName() : name;
+    }
+    
+    function bindToAnonExchange(qName) {
+        queues[qName].bindTo(exchanges[getQualifiedExchangeName("")], qName.substring(2));
+    }
+    
+    function drawQueue(n) {
+        var newName = maybeGetRandomQueueName(n)
+        var name = getQualifiedQueueName(newName);
+        if(!queueExists(name)) {
+            var q = paper.circle(25, 70, 12);
+            q.attr({fill: "#f00", stroke: "#000", "fill-opacity": .50, "stroke-width": 2, cursor: "move"});
+            q.drag(handleDrag.move, handleDrag.dragger, handleDrag.up);
+
+            uiElements.queues[name] = q;
+            queues[name] = Queue(name, q);
+            
+            bindToAnonExchange(name);
+
+            q.click(function(event){
+                updateInspector(inspector, {type: queues[name].getType(), item: queues[name]});
+                $("#b_queue_name").val(newName);
+                $("#consumer_queue").val(newName);
+            });
+            
+            $(queues[name]).bind('update-inspector', function(event, target, tag){
+                if(inspector.currentItem == target.getName()){
+                    updateInspector(inspector, {type: target.getType(), item: target});
+                }
+            });
+        }
+    }
+    
+    function getQualifiedConsumerName(queue, cTag) {
+        return queue + ":" + cTag;
+    }
+    
+    function startConsumer(q, callback) {
+        var queue = getQualifiedQueueName(q);
+        
+        var c = Consumer(q, callback);
+        var cTag = c.consume(queues[queue]);
+        consumers[cTag] = c;
+        
+        var circle = paper.circle(300, 50, 10);
+        circle.attr({fill: "blue", stroke: "#000", "fill-opacity": .50, "stroke-width": 2, cursor: "move"});
+        circle.drag(handleDrag.move, handleDrag.dragger, handleDrag.up);
+        uiElements.consumers[getQualifiedConsumerName(queue, cTag)] = circle;
+        
+        uiElements.channels[cTag] = paper.connection(uiElements.queues[queue], circle, "#fff", "#000");
+        
+        circle.click(function(event){
+            updateInspector(inspector, {type: consumers[cTag].getType(), item: consumers[cTag]});
+        });
+        
+        $(consumers[cTag]).bind('update-inspector', function(event, target, tag){
+            if(inspector.currentItem == target.getName()){
+                showDefaultInspector();
+            }
+        });
+    }
+    
+    function maybeRemoveFirst() {
+      var trs = $("table#status_msgs tr.msg");
+      if(trs.length == 20) {
+        trs.first().remove();
+      }
+    }
+    
+    function showMessage(text, color) {
+        maybeRemoveFirst();
+        var t = $('#status_msgs');
+        t.append('<tr class="msg"><td>' + text + "</td></tr>");
+        var container = t.parent();
+        container.attr({ scrollTop: container.attr("scrollHeight") });
+		var msgHeader = $('#msg_header');
+		if(!msgHeader.hasClass('active')){
+			msgHeader.addClass('active');
+			$("#msgs").show();
+		}
+    }
+    
+    function stopConsumer(q, cTag) {
+        console.log('stopConsumer', q, cTag);
+        queue = getQualifiedQueueName(q);
+        consumers[cTag].stop(queues[queue]);
+        uiElements.consumers[getQualifiedConsumerName(queue, cTag)].remove();
+        uiElements.channels[cTag].line.remove();
+        uiElements.channels[cTag].bg.remove();
+        delete uiElements.consumers[getQualifiedConsumerName(queue, cTag)];
+        delete consumers[cTag];
+        delete uiElements.channels[cTag];
+    }
+    
+    // function startRpcServer(q) {
+    //     var queue = getQualifiedQueueName(q);
+    //     
+    //     var c = RpcServer(function(msg){
+    //         return msg.length;
+    //     });
+    //     var cTag = c.consume(queues[queue]);
+    //     consumers[cTag] = c;
+    //     
+    //     var circle = paper.circle(300, 50, 10);
+    //     circle.attr({fill: "yellow", stroke: "#000", "fill-opacity": .50, "stroke-width": 2, cursor: "move"});
+    //     circle.drag(handleDrag.move, handleDrag.dragger, handleDrag.up);
+    //     uiElements.consumers[getQualifiedConsumerName(queue, cTag)] = circle;
+    // }
+    
+    function getQualifiedBindKey(exchange, queue, rkey){
+        return [exchange, queue, rkey].join('|');
+    }
+    
+    function addBinding(ex, q, rkey) {
+        var exchange = getQualifiedExchangeName(ex);
+        var queue = getQualifiedQueueName(q);
+        //check to see if the binding is present.
+        var qualiQueueName = getQualifiedBindKey(exchange, queue, rkey);
+        if(typeof uiElements.bindings[qualiQueueName] != 'undefined') {
+            throw "Queue: " + q + " already bound to exchange: " + ex + " with rkey: " + rkey;
+        }
+        
+        if(queues[queue].bindTo(exchanges[exchange], rkey)) {
+            exUi = uiElements.exchanges[exchange];
+            qUi = uiElements.queues[queue];
+            uiElements.bindings[qualiQueueName] = paper.connection(exUi, qUi, "#000", "#000");
+        } else {
+            console.log("Failed to create binding.");
+        }
+    }
+    
+    function validateUnbindExchange(exchange, queue) {
+        if(exchange.length == 0) {
+            throw "Can't unbind from the default exchange";
+        }
+        
+        if(!exchangeExists(getQualifiedExchangeName(exchange))) {
+            throw "Exchange: " + exchange + "don't exist";
+        }
+        
+        if(!queueExists(getQualifiedQueueName(queue))) {
+            throw "Queue: " + queue + "don't exist";
+        }
+    }
+    
+    function removeVisualBinding(queue, exchange, rkey) {
+        visualBinding = uiElements.bindings[getQualifiedBindKey(exchange, queue, rkey)];
+        visualBinding.line.remove();
+        visualBinding.bg.remove();
+        delete uiElements.bindings[getQualifiedBindKey(exchange, queue, rkey)];
+        visualBinding = undefined;
+    }
+    
+    function unbindQueue(queue, exchange, rkey) {
+        var queue = $.trim(queue);
+        var exchange = $.trim(exchange);
+        var rkey = $.trim(rkey);
+        
+        validateUnbindExchange(exchange, queue);
+        
+        var qualifiedQName = getQualifiedQueueName(queue);
+        var qualifiedExName = getQualifiedExchangeName(exchange);
+        
+        var res = queues[qualifiedQName].unbind(exchanges[qualifiedExName], rkey);
+        if(res) {
+            removeVisualBinding(qualifiedQName, qualifiedExName, rkey);
+        }
+    }
+    
+    function sendMsg(exchange, body, routing_key, reply_to, correlation_id){
+        var msg = {
+            props: {correlation_id: correlation_id, reply_to: reply_to},
+            body: body
+        };
+        exchanges[getQualifiedExchangeName(exchange)].route(msg, routing_key);
+    }
+    
+    function addAnonExchange() {
+        exchanges[getQualifiedExchangeName("")] = Exchange(getQualifiedExchangeName(""), null);
+    }
+    
+    $(document).ready(function(){
+        
+        addAnonExchange();
+        
+        createInspector('#inspected-item');
+        showDefaultInspector();
+        paper =  new Raphael("whiteboard", $('#whiteboard').width(), $('#whiteboard').height());
+        
+        function validateExchangeName(name) {
+            if(name.length == 0) {
+                throw "Can't create unnamed exchange";
+            }
+        }
+        
+        $('#exchange_form').submit(function() {
+            var name = $.trim($("#exchange_name").val());
+            try{
+                validateExchangeName(name);
+                drawExchange(name);
+                $(this).find('input').not(':button, :submit, :reset, :hidden').val('');
+            }catch(err){
+                console.log(err)
+            }
+            
+            return false;
+        });
+        
+        $('#queue_form').submit(function() {
+            var name = $.trim($("#queue_name").val());
+            try{
+                drawQueue(name);
+                $(this).find('input').not(':button, :submit, :reset, :hidden').val('');
+            }catch(err){
+                console.log(err)
+            }
+            return false;
+        });
+        
+        function validateBindParams(queue, exchange) {
+            if(queue.length == 0 || exchange.length == 0) {
+                throw "Invalid queue or exchange name for binding";
+            } else if(typeof uiElements.queues[getQualifiedQueueName(queue)] == "undefined" || 
+                      typeof uiElements.exchanges[getQualifiedExchangeName(exchange)] == "undefined") {
+                throw "Invalid queue or exchange name for binding";
+            } else if(!queueExists(getQualifiedQueueName(queue))) {
+                throw "Queue " + queue + " does not exist";
+            } else if(!exchangeExists(getQualifiedExchangeName(exchange))) {
+                throw "Exchange " + exchange + " does not exist";
+            }
+        }
+        
+        $('#bind_form').submit(function() {
+            var exchange = $.trim($("#b_exchange_name").val());
+            var queue = $.trim($("#b_queue_name").val());
+            var routing_key = $.trim($("#routing_key").val());
+            try  {
+                validateBindParams(queue, exchange);
+                addBinding(exchange, queue, routing_key);
+                $(this).find('input').not(':button, :submit, :reset, :hidden').val('');
+            } catch(err){
+                console.log(err);
+            }
+            
+            return false;
+        });
+        
+        $('#publish_msg').submit(function() {
+            var exchange = $.trim($("#p_exchange_name").val());
+            var body = $.trim($("#msg_body").val());
+            var routing_key = $.trim($("#p_routing_key").val());
+            var reply_to = $.trim($("#p_reply_to").val());
+            var correlation_id = $.trim($("#p_correlation_id").val());
+            
+            try  {
+                sendMsg(exchange, body, routing_key, reply_to, correlation_id);
+            } catch(err){
+                console.log(err);
+            }
+            
+            return false;
+        })
+        
+        function validateConsumerQueueName(queue){
+            if(queue.length == 0) {
+                throw "You must specify a queue name";
+            } else if(!queueExists(getQualifiedQueueName(queue))){
+                throw "Queue " + queue + "doesn't exist";
+            }
+        }
+        
+        var defaultConsumerCode = "function(msg){showMessage(msg.body);}";
+        $("#consumer_callback").val(defaultConsumerCode);
+        
+        $('#start_consumer').submit(function(){
+            var queue = $.trim($("#consumer_queue").val());
+            var code = $.trim($("#consumer_callback").val());
+            eval("var callback = " + code);
+            try  {
+                validateConsumerQueueName(queue);
+                startConsumer(queue, callback);
+                $("#consumer_queue").val("");
+                $("#consumer_callback").val(defaultConsumerCode);
+            } catch(err){
+                console.log(err);
+            }
+
+            return false;
+        });
+        
+        // $('.queue-binding').button();
+        /*
+        $("legend").mouseover(function () {
+            $(this).css("cursor","move");
+        });
+        
+        var widgetForms = $('.widget_forms');
+        
+        widgetForms.click(function(event){
+
+            var group = $.makeArray(widgetForms).sort(function(a,b) {
+                return (parseInt($(a).css("zIndex"),10) || 0) - (parseInt($(b).css("zIndex"),10) || 0);
+            });
+            if (!group.length) { return; }
+
+            var min = parseInt(group[0].style.zIndex) || 0;
+            $(group).each(function(i) {
+                this.style.zIndex = min + i;
+            });
+            
+            // console.log("this: ", this);
+            this.style.zIndex = min + group.length;
+        });
+        
+        widgetForms.draggable({
+            handle: "legend", 
+            cursor: "move", 
+            zIndex: 1000,
+            stack: '.widget_forms'
+        });
+*/
+	
+		$(".trigger").click(function(){
+			if( $(this).hasClass("active") ) {
+				$(".panel").hide("slide", { direction: "right" }, 300);
+			} else {
+				$(".panel").show("slide", { direction: "right" }, 300);
+			}
+			$(this).toggleClass("active");
+			return false;
+		});
+	
+		$("#msg_header").click(function(){
+			if( $(this).hasClass("active") ) {
+				$("#msgs").hide();
+			} else {
+				$("#msgs").show();
+			}
+			$(this).toggleClass("active");
+			return false;
+		});
+		$( "#tabs" ).tabs({active:0});
+    });
+// })(this.jQuery);
+    </script>
+  </body> 
+</html>
