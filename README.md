@@ -7,6 +7,7 @@ See a demo here: [tryrabbitmq](http://tryrabbitmq.github.com)
 # Credits #
 
 Code: Alvaro Videla [@old_sound](http://twitter.com/#!/old_sound)
+
 Design: Loïc Schule [@lschule](http://twitter.com/#!/lschule)
 
 # License #
