@@ -1,5 +1,5 @@
 function getExchangeView(exchange) {
-  
+
   var formatBindings = function(bindings){
       var result = [];
       $.each(bindings, function(key, val) {
@@ -11,7 +11,7 @@ function getExchangeView(exchange) {
       });
       return result;
   };
-  
+
   var detail = $("#exchange-details").mustache({
       Name: exchange.getName().substring(2),
       Bindings: formatBindings(exchange.getBindings()),
@@ -19,7 +19,7 @@ function getExchangeView(exchange) {
           return this.Bindings.length > 0;
       }
   });
-  
+
   return detail;
 }
 
@@ -28,7 +28,7 @@ function getQueueView(queue) {
 
   $.each(queue.getBindings(), function(key, val) {
     tmpBindings.push({
-      exchange: val.exchange.substring(2) || "anon", 
+      exchange: val.exchange.substring(2) || "anon",
       rkey: val.rkey || "empty",
       bindingsAsLink: function() {
         return this.exchange != "anon";
@@ -59,7 +59,8 @@ function addQueueBindingButtons() {
   $("div#inspected-queue a.delete-button").click(function(event){
     var parts = this.href.split('#')[1].split(':');
     try{
-      unbindQueue(parts[1], parts[0], parts[2] || "");
+      var rkey = parts[2] == 'empty' ? "" : parts[2];
+      unbindQueue(parts[1], parts[0], rkey);
     } catch(err){
       console.log(err);
     }
@@ -81,7 +82,8 @@ function addExchangeBindingButtons() {
   $("div#inspected-exchange a.delete-button").click(function(event){
     var parts = this.href.split('#')[1].split(':');
     try{
-      unbindQueue(parts[1], parts[0], parts[2] || "");
+        var rkey = parts[2] == 'empty' ? "" : parts[2];
+      unbindQueue(parts[1], parts[0], rkey);
     } catch(err){
       console.log(err);
     }
@@ -107,7 +109,7 @@ function addStopConsumerButtons() {
       $(this).next("span.option-buttons").show();
       event.preventDefault();
   });
-  
+
   $("div#inspected-consumer a.delete-button").click(function(event){
       console.log('stopConsumer', this.href);
       var parts = this.href.split('#')[1].split('|');
@@ -118,7 +120,7 @@ function addStopConsumerButtons() {
       }
       event.preventDefault();
   });
-  
+
   $("div#inspected-consumer a.cancel-button").click(function(event){
       $(this).parent().hide();
       event.preventDefault();

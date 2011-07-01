@@ -384,6 +384,7 @@ Queue: <a href="#" class="exchange-binding">{{.}}</a>
             },
 
             unbind: function(exchange, rkey) {
+                console.log("queue.unbind", exchange, rkey);
                 if(exchange.unbindQueue(this, rkey)) {
                     var that = this;
                     var result = false;
@@ -460,7 +461,6 @@ Queue: <a href="#" class="exchange-binding">{{.}}</a>
                 bKey = this._calcBindKey(rkey);
                 if(this.hasBinding(bKey)) {
                     i = this.bindings[bKey].indexOf(queue);
-                    console.log('unbindQueue: ', i);
                     if(i > -1) {
                         this.bindings[bKey].splice(i, 1);
                     }
@@ -823,38 +823,6 @@ Queue: <a href="#" class="exchange-binding">{{.}}</a>
 
             return false;
         });
-
-        // $('.queue-binding').button();
-        /*
-        $("legend").mouseover(function () {
-            $(this).css("cursor","move");
-        });
-
-        var widgetForms = $('.widget_forms');
-
-        widgetForms.click(function(event){
-
-            var group = $.makeArray(widgetForms).sort(function(a,b) {
-                return (parseInt($(a).css("zIndex"),10) || 0) - (parseInt($(b).css("zIndex"),10) || 0);
-            });
-            if (!group.length) { return; }
-
-            var min = parseInt(group[0].style.zIndex) || 0;
-            $(group).each(function(i) {
-                this.style.zIndex = min + i;
-            });
-
-            // console.log("this: ", this);
-            this.style.zIndex = min + group.length;
-        });
-
-        widgetForms.draggable({
-            handle: "legend",
-            cursor: "move",
-            zIndex: 1000,
-            stack: '.widget_forms'
-        });
-*/
 
         $(".trigger").click(function(){
             if( $(this).hasClass("active") ) {
